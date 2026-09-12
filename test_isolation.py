@@ -21,11 +21,13 @@ HERE = Path(__file__).parent
 
 # The fly's side may not touch any of these.
 FLY_SIDE = ("roam.py", "backroom.py", "flyeye.py", "voice.py", "xpost.py")
-FLY_FORBIDDEN = {"eth_account", "executor", "tradebook", "rhwallet", "rhprovider"}
+FLY_FORBIDDEN = {"eth_account", "executor", "tradebook", "rhwallet", "rhprovider",
+                 "solwallet", "stonkfun", "phoenix", "nacl"}
 
 # The paper side may hold no wallet and no signer.
 PAPER_SIDE = ("executor.py", "tradebook.py")
-PAPER_FORBIDDEN = {"eth_account", "rhwallet", "rhprovider"}
+PAPER_FORBIDDEN = {"eth_account", "rhwallet", "rhprovider",
+                   "solwallet", "stonkfun", "phoenix", "nacl"}
 
 MISSING = [n for n in FLY_SIDE + PAPER_SIDE if not (HERE / n).exists()]
 
@@ -76,13 +78,17 @@ class Isolation(unittest.TestCase):
         src = ("def f():\n"
                "    import eth_account\n"
                "    from rhwallet import load\n"
-               "    __import__('rhprovider')\n")
+               "    __import__('rhprovider')\n"
+               "    import solwallet\n"
+               "    from stonkfun import submit\n"
+               "    __import__('phoenix')\n")
         tmp = HERE / "build" / "_isolation_probe.py"
         tmp.parent.mkdir(parents=True, exist_ok=True)
         tmp.write_text(src, encoding="utf-8")
         try:
             self.assertEqual(imported_modules(tmp) & FLY_FORBIDDEN,
-                             {"eth_account", "rhwallet", "rhprovider"})
+                             {"eth_account", "rhwallet", "rhprovider",
+                              "solwallet", "stonkfun", "phoenix"})
         finally:
             tmp.unlink()
 

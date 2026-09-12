@@ -34,6 +34,8 @@ def base_env(**over):
         "X_ENABLED": "false",
         "FLY_RH_SECRET": "placeholder-chain-secret",
         "FLY_RH_SECRET_2": "placeholder-chain-secret",
+        "FLY_SOL_SECRET": "placeholder-sol-secret",
+        "FLY_SOL_SECRET_2": "placeholder-sol-secret",
         "FLY_GH_TOKEN": "placeholder-repo-token",
         "FLY_BLOB_TOKEN": "placeholder-blob-token",
     }
@@ -113,7 +115,9 @@ class Environments(unittest.TestCase):
     def test_the_executor_has_no_keys_at_all(self):
         env = self.p["executor"].env
         for k in ("X_API_KEY", "X_API_SECRET", "X_ENABLED", "OPENROUTER_API_KEY",
-                  "FLY_RH_SECRET", "FLY_RH_SECRET_2", "FLY_GH_TOKEN", "FLY_BLOB_TOKEN"):
+                  "FLY_RH_SECRET", "FLY_RH_SECRET_2",
+                  "FLY_SOL_SECRET", "FLY_SOL_SECRET_2",
+                  "FLY_GH_TOKEN", "FLY_BLOB_TOKEN"):
             self.assertNotIn(k, env)
         self.assertEqual(env["FLY_STATE_DIR"], "C:/tmp/state")
         self.assertIn("FLY_INTENT_TOKEN", env)
@@ -121,7 +125,8 @@ class Environments(unittest.TestCase):
     def test_the_roamer_keeps_only_what_it_publishes_with(self):
         env = self.p["roam"].env
         for k in ("X_API_KEY", "X_API_SECRET", "X_ENABLED",
-                  "OPENROUTER_API_KEY", "FLY_RH_SECRET", "FLY_RH_SECRET_2"):
+                  "OPENROUTER_API_KEY", "FLY_RH_SECRET", "FLY_RH_SECRET_2",
+                  "FLY_SOL_SECRET", "FLY_SOL_SECRET_2"):
             self.assertNotIn(k, env)
         self.assertIn("FLY_GH_TOKEN", env)      # it writes the tunnel address
         self.assertIn("FLY_BLOB_TOKEN", env)
@@ -130,8 +135,16 @@ class Environments(unittest.TestCase):
         env = self.p["voice"].env
         self.assertIn("OPENROUTER_API_KEY", env)
         self.assertIn("X_API_KEY", env)
-        for k in ("FLY_RH_SECRET", "FLY_RH_SECRET_2", "FLY_INTENT_TOKEN"):
+        for k in ("FLY_RH_SECRET", "FLY_RH_SECRET_2",
+                  "FLY_SOL_SECRET", "FLY_SOL_SECRET_2", "FLY_INTENT_TOKEN"):
             self.assertNotIn(k, env)
+
+    def test_the_solana_secret_is_stripped_like_the_rh_secret(self):
+        for name in ("executor", "roam", "voice"):
+            env = self.p[name].env
+            for k in ("FLY_SOL_SECRET", "FLY_SOL_SECRET_2",
+                      "FLY_RH_SECRET", "FLY_RH_SECRET_2"):
+                self.assertNotIn(k, env, name)
 
     def test_nothing_changes_without_the_backroom(self):
         base = base_env()
@@ -149,8 +162,9 @@ class Environments(unittest.TestCase):
 
     def test_prefix_matching_is_a_prefix_not_a_substring(self):
         env = run_all.without({"X_API_KEY": "1", "MY_X_API_KEY": "2", "FLY_RH_SECRETS": "3",
-                               "FLY_RH_RPC": "4"}, "X_*", "FLY_RH_SECRET*")
-        self.assertEqual(env, {"MY_X_API_KEY": "2", "FLY_RH_RPC": "4"})
+                               "FLY_RH_RPC": "4", "FLY_SOL_SECRET": "5", "FLY_SOL_RPC": "6"},
+                              "X_*", "FLY_RH_SECRET*", "FLY_SOL_SECRET*")
+        self.assertEqual(env, {"MY_X_API_KEY": "2", "FLY_RH_RPC": "4", "FLY_SOL_RPC": "6"})
 
 
 class TheFileTheChildrenRead(unittest.TestCase):
@@ -174,6 +188,7 @@ class TheFileTheChildrenRead(unittest.TestCase):
                                 "X_ENABLED=true",
                                 "OPENROUTER_API_KEY=placeholder-model-key",
                                 "FLY_RH_SECRET=placeholder-chain-secret",
+                                "FLY_SOL_SECRET=placeholder-sol-secret",
                                 "FLY_GH_TOKEN=placeholder-repo-token",
                                 "FLY_INTENT_TOKEN=placeholder-intent-token",
                                 "FLY_STATE_DIR=C:/tmp/state"]), encoding="utf-8")
@@ -185,14 +200,16 @@ class TheFileTheChildrenRead(unittest.TestCase):
 
     def test_the_roamer_cannot_read_back_what_it_was_started_without(self):
         got = self.read_as("roam")
-        for k in ("X_API_KEY", "X_ENABLED", "OPENROUTER_API_KEY", "FLY_RH_SECRET"):
+        for k in ("X_API_KEY", "X_ENABLED", "OPENROUTER_API_KEY",
+                  "FLY_RH_SECRET", "FLY_SOL_SECRET"):
             self.assertNotIn(k, got)
         self.assertIn("FLY_GH_TOKEN", got)          # it writes the tunnel address
         self.assertEqual(got["FLY_STATE_DIR"], "C:/tmp/state")
 
     def test_the_executor_cannot_read_back_a_key_either(self):
         got = self.read_as("executor")
-        for k in ("X_API_KEY", "OPENROUTER_API_KEY", "FLY_RH_SECRET", "FLY_GH_TOKEN"):
+        for k in ("X_API_KEY", "OPENROUTER_API_KEY", "FLY_RH_SECRET",
+                  "FLY_SOL_SECRET", "FLY_GH_TOKEN"):
             self.assertNotIn(k, got)
         self.assertIn("FLY_INTENT_TOKEN", got)
         self.assertEqual(got["FLY_STATE_DIR"], "C:/tmp/state")
@@ -201,6 +218,7 @@ class TheFileTheChildrenRead(unittest.TestCase):
         got = self.read_as("voice")
         self.assertNotIn("FLY_INTENT_TOKEN", got)
         self.assertNotIn("FLY_RH_SECRET", got)
+        self.assertNotIn("FLY_SOL_SECRET", got)
         self.assertIn("X_API_KEY", got)             # it does hold its own account
 
     def test_without_a_deny_list_the_file_is_read_as_before(self):
@@ -222,6 +240,8 @@ class TheFileTheChildrenRead(unittest.TestCase):
 
     def test_a_prefix_in_the_list_is_a_prefix(self):
         self.assertTrue(launch.denied("FLY_RH_SECRET_2", ["FLY_RH_SECRET*"]))
+        self.assertTrue(launch.denied("FLY_SOL_SECRET_2", ["FLY_SOL_SECRET*"]))
+        self.assertFalse(launch.denied("FLY_SOL_RPC", ["FLY_SOL_SECRET*"]))
         self.assertFalse(launch.denied("MY_X_API_KEY", ["X_*"]))
         self.assertTrue(launch.denied("X_API_KEY", ["X_*"]))
 

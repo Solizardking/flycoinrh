@@ -15,8 +15,8 @@ Because it is the process that talks to the chain's RPC, it is also the one
 process that must never be handed the account secrets - so each child here
 gets its own environment rather than a copy of everything:
 
-  executor   no X keys, no model key, no chain secret, no repo or blob token
-  roam       no X keys, no model key, no chain secret
+  executor   no X keys, no model key, no chain secret (RH or Solana), no repo or blob token
+  roam       no X keys, no model key, no chain secret (RH or Solana)
   voice      no intent token (it narrates the fly; it cannot order a trade)
 
 The intent token is minted here, once per boot, and given only to the room
@@ -45,10 +45,10 @@ HEALTHY_AFTER_S = 300      # a child that lived this long resets its backoff
 GIVE_UP_AFTER = 8          # consecutive fast deaths before the supervisor exits
 
 # What each child must not be able to read. A name ending in "*" is a prefix.
-EXECUTOR_DENY = ("X_*", "OPENROUTER_API_KEY", "FLY_RH_SECRET*",
+EXECUTOR_DENY = ("X_*", "OPENROUTER_API_KEY", "FLY_RH_SECRET*", "FLY_SOL_SECRET*",
                  "FLY_GH_TOKEN", "FLY_BLOB_TOKEN")
-ROAM_DENY = ("X_*", "OPENROUTER_API_KEY", "FLY_RH_SECRET*")
-VOICE_DENY = ("FLY_INTENT_TOKEN", "FLY_RH_SECRET*")
+ROAM_DENY = ("X_*", "OPENROUTER_API_KEY", "FLY_RH_SECRET*", "FLY_SOL_SECRET*")
+VOICE_DENY = ("FLY_INTENT_TOKEN", "FLY_RH_SECRET*", "FLY_SOL_SECRET*")
 
 
 def say(msg):
