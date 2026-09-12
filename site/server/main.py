@@ -8,13 +8,24 @@ reader can repeat against the same public node.
 
 Nothing is written, no key is loaded, and there is no code path here that can
 sign anything. The site is a window, not a control panel.
+
+Optional Solana fields (clawd-ws /health, a Phoenix SOL mark, Stonkfun
+listings) are the same kind of read: public GETs, no secret, no submit.
 """
 import os
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 import requests
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
+CLAWD_HEALTH = os.environ.get("FLY_CLAWD_HEALTH",
+                              "https://clawd-ws.fly.dev/health")
+PHOENIX_MARK = os.environ.get(
+    "FLY_PX_MARK", "https://perp-api.phoenix.trade/v1/market/SOL/mark-price")
+STK_TOKENS = "https://www.stonkfun.xyz/api/public/v1/tokens?sort=newest"
+STK_PAIRS = "https://www.stonkfun.xyz/api/public/v1/pairs?launchable=true"
 
 RPC = os.environ.get("FLY_RH_RPC", "https://rpc.mainnet.chain.robinhood.com")
 CHAIN_ID = 4663
@@ -143,8 +154,110 @@ def state():
         out["ok"] = False
         out["error"] = str(exc)[:200]
 
+    out["solana"] = solana_window()
     out["updated"] = int(now)
     _cache.update(at=now, data=out)
+    return out
+
+
+def _cut(s, n):
+    x = "" if s is None else str(s)
+    return x[:n]
+
+
+def _num(v):
+    try:
+        n = float(v)
+    except (TypeError, ValueError):
+        return None
+    return n if n == n else None  # NaN
+
+
+def _get(url):
+    r = requests.get(url, timeout=6)
+    r.raise_for_status()
+    return r.json()
+
+
+def _sol_health():
+    h = _get(CLAWD_HEALTH)
+    return {
+        "ok": True,
+        "status": _cut(h.get("status"), 24) or None,
+        "clients": _num(h.get("clients")),
+        "totalLaunches": _num(h.get("totalLaunches")),
+        "solana": h.get("solana") if isinstance(h.get("solana"), bool) else None,
+    }
+
+
+def _sol_mark():
+    m = _get(PHOENIX_MARK)
+    if m.get("error"):
+        return {"ok": False, "symbol": "SOL", "error": _cut(m.get("error"), 80)}
+    mp = m.get("markPrice")
+    price = _num(mp.get("price") if isinstance(mp, dict) else mp)
+    return {"ok": price is not None, "symbol": _cut(m.get("symbol") or "SOL", 12),
+            "mark": price, "slot": _num(m.get("slot"))}
+
+
+def _sol_tokens():
+    body = _get(STK_TOKENS)
+    data = body.get("data") or body
+    rows = data.get("tokens") or []
+    return [{
+        "name": _cut(t.get("name"), 40),
+        "symbol": _cut(t.get("symbol"), 16),
+        "mint": _cut(t.get("mint"), 64),
+        "quote": _cut(((t.get("quote") or {}).get("symbol")), 12),
+        "marketCapUsd": _num((t.get("market") or {}).get("marketCapUsd")),
+        "status": _cut(t.get("status"), 16),
+        "createdAt": _cut(t.get("createdAt"), 40),
+    } for t in rows[:8] if isinstance(t, dict)]
+
+
+def _sol_pairs():
+    body = _get(STK_PAIRS)
+    data = body.get("data") or body
+    rows = data.get("pairs") or []
+    return [{
+        "symbol": _cut(p.get("symbol"), 16),
+        "name": _cut(p.get("name"), 28),
+        "mint": _cut(p.get("mint"), 64),
+        "category": _cut(p.get("categoryLabel") or p.get("category"), 20),
+        "launchable": True,
+    } for p in rows if isinstance(p, dict) and p.get("launchable")][:24]
+
+
+def solana_window():
+    """
+    Public Solana reads for the site. Failures stay on their own field so a
+    down tape does not take the Robinhood numbers with it. RPC URLs from
+    clawd-ws /health are dropped — they are not a window the page should show.
+    """
+    out = {"ok": True, "tape": "https://clawd-ws.fly.dev/"}
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        fh = pool.submit(_sol_health)
+        fm = pool.submit(_sol_mark)
+        ft = pool.submit(_sol_tokens)
+        fp = pool.submit(_sol_pairs)
+        try:
+            out["clawdws"] = fh.result()
+        except Exception as exc:
+            out["clawdws"] = {"ok": False, "error": str(exc)[:120]}
+        try:
+            out["phoenix"] = fm.result()
+        except Exception as exc:
+            out["phoenix"] = {"ok": False, "symbol": "SOL", "error": str(exc)[:120]}
+        try:
+            out["tokens"] = ft.result()
+        except Exception as exc:
+            out["tokens"] = []
+            out["tokens_error"] = str(exc)[:120]
+        try:
+            out["pairs"] = fp.result()
+        except Exception as exc:
+            out["pairs"] = []
+            out["pairs_error"] = str(exc)[:120]
     return out
 
 

@@ -91,6 +91,20 @@ intermittently answers `Access-Control-Allow-Origin: *,*`, which browsers
 refuse. The live feed comes from the hosted roaming service over a websocket;
 if that service is unreachable the page falls back to a published tunnel address.
 
+The same page is a **read-only Solana window**, not a control panel. It
+shows the live PumpFun tape from
+[clawd-ws.fly.dev](https://clawd-ws.fly.dev/) — embedded as
+`site/web/tape.html`, the same phosphor panel as the rest of the site,
+talking to the same `/ws` frames `clawdws.py` already parses — plus
+`GET /health` (status, clients, totalLaunches, solana). A Phoenix SOL mark
+comes from the public API `phoenix.py` uses
+(`https://perp-api.phoenix.trade/v1/market/SOL/mark-price`); if the
+browser is blocked, `/api/state` fills it. Stonkfun newest tokens and
+launchable pairs come from the public Developer API
+(`https://www.stonkfun.xyz/api/public/v1`) with no key. Nothing on the
+site stores a secret, signs, or submits a launch — `stonkfun.py` /
+`phoenix.py` stay behind `FLY_SOL_LIVE`.
+
 
 ### The voice
 
