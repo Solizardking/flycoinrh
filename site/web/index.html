@@ -1603,7 +1603,7 @@ function paintPairs(rows){
     el.className = 'solchip';
     el.textContent = solCut(p.symbol || '?', 12);
     const sub = document.createElement('span');
-    sub.textContent = solCut(p.name || p.category || '', 16);
+    sub.textContent = '· ' + solCut(p.name || p.category || '', 16);
     el.appendChild(sub);
     host.appendChild(el);
   }

@@ -156,9 +156,10 @@ function connect(){
     try { msg = JSON.parse(ev.data); } catch (e) { return; }
     if (!msg || typeof msg !== 'object') return;
     if (msg.type === 'token-launch') row(msg);
-    else if (msg.type === 'status') {
-      if (msg.totalLaunches != null) $('h-launches').textContent = nf(msg.totalLaunches);
-      if (msg.clients != null) $('h-clients').textContent = nf(msg.clients);
+    else if (msg.type === 'status' && msg.clients != null) {
+      // clients move with the socket; launch totals stay on /health so the
+      // two counters on this page do not disagree
+      $('h-clients').textContent = nf(msg.clients);
     }
   };
   sock.onclose = () => {
