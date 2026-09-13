@@ -271,6 +271,25 @@ footer .links{display:flex;flex-wrap:wrap;gap:22px;margin-bottom:20px}
 .bkempty{padding:7px 0;font-size:11px;color:var(--g-faint)}
 .bkbusy{margin-top:10px;font-size:10px;letter-spacing:.02em;color:var(--g-faint)}
 
+/* ---------- solana rails ----------
+   Same phosphor instrument as live and the backroom. Prefixed sol- so
+   nothing above this comment changes size or position. A window: the
+   tape, a mark, and two public listings. No key, no submit. */
+.solgrid{display:grid;grid-template-columns:1fr 300px;gap:1px;background:#123a24}
+@media (max-width:880px){.solgrid{grid-template-columns:1fr}}
+.solframe{position:relative;background:#000;min-height:360px}
+.solframe iframe{display:block;width:100%;height:360px;border:0;background:#000}
+.solnote{padding:8px 12px;font-size:10.5px;color:var(--g-dim);letter-spacing:.04em;
+  border-top:1px solid #0d2c1b}
+.solstk{display:grid;grid-template-columns:1.4fr 1fr;gap:1px;background:#123a24;
+  border-top:1px solid #123a24}
+@media (max-width:760px){.solstk{grid-template-columns:1fr}}
+.solstk>.tblk{background:var(--g-bg);border-bottom:0}
+.solchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.solchip{border:1px solid #0d2c1b;padding:3px 7px;font-size:10.5px;color:var(--g);
+  letter-spacing:.04em}
+.solchip span{color:var(--g-faint);margin-left:6px}
+
 /* ---------- the rig ---------- */
 /* The side column is taller than a 16:10 screenshot, and a stretched grid row
    left a black slab under the view. The view is centred in whatever height the
@@ -619,6 +638,93 @@ footer .links{display:flex;flex-wrap:wrap;gap:22px;margin-bottom:20px}
   </div>
 </section>
 
+<section id="solana">
+  <div class="wrap wide">
+    <div class="eyebrow">solana rails</div>
+    <h2 class="bkhead">The other half <span class="pill bkpaper">WINDOW</span></h2>
+    <p class="lede">The same brain, on Solana. This page only looks: the PumpFun tape the relay already publishes, a Phoenix mark, and Stonkfun&rsquo;s public listings. There is no key on this origin and nothing here can sign.</p>
+
+    <div class="term">
+      <div class="tbar">
+        <span class="tname">SOLANA RAILS</span>
+        <span class="tdim">CLAWD-WS TAPE &middot; PHOENIX MARK &middot; STONKFUN</span>
+        <span class="tpills">
+          <span class="pip2" id="sol-tape-pip">TAPE</span>
+          <span class="pip2" id="sol-health-pip">HEALTH</span>
+          <span class="pip2" id="sol-mark-pip">MARK</span>
+          <span class="pip2" id="sol-stk-pip">LISTINGS</span>
+          <span class="pip2 off" id="sol-keys">NO KEYS</span>
+        </span>
+        <span class="tspacer"></span>
+        <span class="tdim" id="sol-updated">&mdash;</span>
+      </div>
+
+      <div class="solgrid">
+        <div class="solframe">
+          <iframe id="sol-iframe" src="tape.html?embed=1" title="PumpFun live tape"
+                  loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+          <div class="solnote">
+            <a href="https://clawd-ws.fly.dev/" target="_blank" rel="noopener noreferrer">open live tape</a>
+            &nbsp;&middot;&nbsp;
+            <a href="tape.html">full screen</a>
+            &nbsp;&middot;&nbsp;
+            <span class="tdim">if the frame is blank, the live tape is the link</span>
+          </div>
+        </div>
+        <div class="bkcol">
+          <div class="tblk">
+            <div class="tk">clawd-ws /health</div>
+            <div class="tbig" id="sol-status">&mdash;</div>
+            <div class="tsub">STATUS <span class="tdim">public GET, no secret</span></div>
+            <div class="tquad">
+              <div><div class="tql">clients</div><div class="tqv" id="sol-clients">&mdash;</div></div>
+              <div><div class="tql">launches</div><div class="tqv" id="sol-launches">&mdash;</div></div>
+              <div><div class="tql">solana</div><div class="tqv" id="sol-solana">&mdash;</div></div>
+              <div><div class="tql">source</div><div class="tqv" id="sol-hsrc">&mdash;</div></div>
+            </div>
+          </div>
+          <div class="tblk">
+            <div class="tk">Phoenix mark &middot; SOL</div>
+            <div class="tbig" id="sol-mark">&mdash;</div>
+            <div class="tsub" id="sol-mark-sub">perp-api.phoenix.trade</div>
+            <div class="tsub" style="margin-top:8px;text-transform:none;letter-spacing:0">
+              <span class="tdim" id="sol-mark-note">the same GET phoenix.py uses. if the browser is blocked, /api/state fills it.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="solstk">
+        <div class="tblk">
+          <div class="tk">Stonkfun &middot; newest tokens</div>
+          <div class="bklist" id="sol-tokens"></div>
+        </div>
+        <div class="tblk">
+          <div class="tk">Stonkfun &middot; launchable pairs</div>
+          <div class="solchips" id="sol-pairs"></div>
+          <div class="tsub" style="margin-top:10px;text-transform:none;letter-spacing:0">
+            <span class="tdim">public Developer API, no key. launching stays in stonkfun.py behind FLY_SOL_LIVE.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tfoot">
+        <div><span class="tql">clients</span><span class="tfv" id="sol-f-clients">&mdash;</span></div>
+        <div><span class="tql">launches</span><span class="tfv" id="sol-f-launches">&mdash;</span></div>
+        <div><span class="tql">solana</span><span class="tfv" id="sol-f-solana">&mdash;</span></div>
+        <div><span class="tql">SOL mark</span><span class="tfv" id="sol-f-mark">&mdash;</span></div>
+        <div><span class="tql">pairs</span><span class="tfv" id="sol-f-pairs">&mdash;</span></div>
+      </div>
+    </div>
+
+    <ul class="plain" style="margin-top:26px">
+      <li><b>A window, not a control panel.</b> The site never asks for a key and never stores one. There is no prepare, no submit, and no Phoenix order on this origin. <code>FLY_SOL_SECRET</code> does not appear here.</li>
+      <li><b>The tape is the public relay.</b> <a href="https://clawd-ws.fly.dev/">clawd-ws.fly.dev</a> is the live PumpFun page; this site embeds a native readout of the same <code>/ws</code> frames <code>clawdws.py</code> already parses, plus <code>GET /health</code> for status, clients, totalLaunches and solana.</li>
+      <li><b>Stonkfun is listings only.</b> Newest tokens and launchable pairs come from <code>https://www.stonkfun.xyz/api/public/v1</code>. A launch is two POSTs and a local signature, and that path stays in <code>stonkfun.py</code>, disarmed unless <code>FLY_SOL_LIVE=1</code>.</li>
+    </ul>
+  </div>
+</section>
+
 <div class="cabar">
   <div class="wrap cain">
     <div>
@@ -716,6 +822,8 @@ footer .links{display:flex;flex-wrap:wrap;gap:22px;margin-bottom:20px}
       <a href="https://github.com/fruitflydev/flycoinrh">source</a>
       <a href="https://x.com/fruitflydev">@fruitflydev</a>
       <a id="f-scan" href="https://robinhoodchain.blockscout.com">explorer</a>
+      <a href="tape.html">solana tape</a>
+      <a href="https://clawd-ws.fly.dev/" rel="noopener noreferrer">clawd-ws tape</a>
     </div>
     <div><span class="pill"><span class="pip" id="pip"></span><span id="pip-t">reading the chain</span></span></div>
     <p style="margin-top:22px;max-width:66ch">Connectome data &copy; HHMI Janelia FlyEM, the Cambridge Connectomics Group and Google Research, released CC-BY. Simulation after Shiu et&nbsp;al. 2024 and Lappalainen et&nbsp;al. 2024. Not affiliated with any of them, nor with pons or Robinhood. $FLYBRAIN is an art experiment, not an investment.</p>
@@ -1387,6 +1495,217 @@ setInterval(backroomTick, 15000);
 
 tick();
 setInterval(tick, 15000);
+
+/* ---------------------------------------------------------------------------
+   Solana rails.
+
+   Three public GETs and one websocket (inside tape.html). The page tries
+   each origin from the browser first. /api/state carries the same fields
+   as a fallback when CORS or a rate limit blocks the browser — the same
+   reason the Robinhood numbers go through that function. Only the fields
+   named below are read; clawd-ws /health also echoes RPC URLs, and those
+   never land in the DOM.
+--------------------------------------------------------------------------- */
+const SOL_HEALTH = 'https://clawd-ws.fly.dev/health';
+const SOL_MARK = 'https://perp-api.phoenix.trade/v1/market/SOL/mark-price';
+const SOL_TOKENS = 'https://www.stonkfun.xyz/api/public/v1/tokens?sort=newest';
+const SOL_PAIRS = 'https://www.stonkfun.xyz/api/public/v1/pairs?launchable=true';
+const SOL_ORB = 'https://orbmarkets.io/token/';
+
+function solCut(s, n){
+  const x = s == null ? '' : String(s);
+  return x.length > n ? x.slice(0, n - 1) + '…' : x;
+}
+function solN(v, d){
+  if (v == null || v === '' || !isFinite(Number(v))) return '—';
+  return Number(v).toLocaleString(undefined, {
+    minimumFractionDigits: d, maximumFractionDigits: d,
+  });
+}
+function solPip(id, on){ $$(id).classList.toggle('on', !!on); }
+
+function paintHealth(d, src){
+  if (!d) return;
+  $$('sol-status').textContent = solCut(d.status || (d.ok === false ? 'down' : '—'), 16);
+  $$('sol-clients').textContent = solN(d.clients, 0);
+  $$('sol-launches').textContent = solN(d.totalLaunches, 0);
+  $$('sol-solana').textContent = d.solana === true ? 'on' : d.solana === false ? 'off' : '—';
+  $$('sol-hsrc').textContent = src || '—';
+  $$('sol-f-clients').textContent = solN(d.clients, 0);
+  $$('sol-f-launches').textContent = solN(d.totalLaunches, 0);
+  $$('sol-f-solana').textContent = d.solana === true ? 'on' : d.solana === false ? 'off' : '—';
+  solPip('sol-health-pip', d.status != null || d.ok);
+}
+
+function paintMark(d, src, note){
+  const price = d && (d.mark != null ? d.mark
+    : (d.markPrice && typeof d.markPrice === 'object' ? d.markPrice.price : d.markPrice));
+  const ok = price != null && isFinite(Number(price));
+  $$('sol-mark').textContent = ok ? Number(price).toLocaleString(undefined, {
+    minimumFractionDigits: 2, maximumFractionDigits: 2,
+  }) : '—';
+  $$('sol-f-mark').textContent = $$('sol-mark').textContent;
+  $$('sol-mark-sub').textContent = ok
+    ? ((d.symbol || 'SOL') + ' · ' + (src || 'phoenix'))
+    : (note || 'mark unavailable');
+  if (note) $$('sol-mark-note').textContent = note;
+  solPip('sol-mark-pip', ok);
+}
+
+function paintTokens(rows){
+  const host = $$('sol-tokens');
+  host.innerHTML = '';
+  const list = Array.isArray(rows) ? rows.slice(0, 8) : [];
+  if (!list.length){
+    const e = document.createElement('div');
+    e.className = 'bkempty';
+    e.textContent = 'no listings yet';
+    host.appendChild(e);
+    return;
+  }
+  for (const t of list){
+    const row = document.createElement('div');
+    row.className = 'bkr';
+    const s = document.createElement('span');
+    s.className = 'bks';
+    s.textContent = solCut(t.symbol || '?', 12);
+    const n = document.createElement('span');
+    n.className = 'bkd';
+    const a = document.createElement('a');
+    a.href = SOL_ORB + encodeURIComponent(t.mint || '');
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    a.textContent = solCut((t.name || t.mint || 'unnamed') +
+      (t.quote ? ' / ' + t.quote : ''), 48);
+    n.appendChild(a);
+    const v = document.createElement('span');
+    v.className = 'bkv';
+    v.textContent = t.marketCapUsd == null ? '—' : solN(t.marketCapUsd, 0);
+    row.appendChild(s); row.appendChild(n); row.appendChild(v);
+    host.appendChild(row);
+  }
+}
+
+function paintPairs(rows){
+  const host = $$('sol-pairs');
+  host.innerHTML = '';
+  const list = Array.isArray(rows) ? rows.slice(0, 24) : [];
+  $$('sol-f-pairs').textContent = solN(list.length, 0);
+  if (!list.length){
+    const e = document.createElement('div');
+    e.className = 'bkempty';
+    e.textContent = 'no launchable pairs';
+    host.appendChild(e);
+    return;
+  }
+  for (const p of list){
+    const el = document.createElement('span');
+    el.className = 'solchip';
+    el.textContent = solCut(p.symbol || '?', 12);
+    const sub = document.createElement('span');
+    sub.textContent = '· ' + solCut(p.name || p.category || '', 16);
+    el.appendChild(sub);
+    host.appendChild(el);
+  }
+  solPip('sol-stk-pip', list.length > 0);
+}
+
+function pickTokens(j){
+  const data = (j && j.data) || j || {};
+  const rows = Array.isArray(data.tokens) ? data.tokens : (Array.isArray(j) ? j : []);
+  return rows.map((t) => ({
+    name: t.name, symbol: t.symbol, mint: t.mint,
+    quote: t.quote && t.quote.symbol ? t.quote.symbol : t.quote,
+    marketCapUsd: t.marketCapUsd != null ? t.marketCapUsd
+      : (t.market && t.market.marketCapUsd),
+  }));
+}
+function pickPairs(j){
+  const data = (j && j.data) || j || {};
+  const rows = Array.isArray(data.pairs) ? data.pairs : (Array.isArray(j) ? j : []);
+  return rows.filter((p) => p && (p.launchable || p.launchable == null)).map((p) => ({
+    symbol: p.symbol, name: p.name, mint: p.mint,
+    category: p.categoryLabel || p.category,
+  }));
+}
+
+async function solFromState(){
+  try {
+    const r = await fetch('/api/state', { cache: 'no-store' });
+    const d = await r.json();
+    return (d && d.solana) || null;
+  } catch (e) { return null; }
+}
+
+async function solHealthTick(){
+  try {
+    const r = await fetch(SOL_HEALTH, { cache: 'no-store' });
+    const d = await r.json();
+    paintHealth({
+      status: d.status, clients: d.clients,
+      totalLaunches: d.totalLaunches, solana: d.solana, ok: true,
+    }, 'clawd-ws');
+    return;
+  } catch (e) { /* proxy */ }
+  const s = await solFromState();
+  if (s && s.clawdws) paintHealth(s.clawdws, '/api/state');
+}
+
+async function solMarkTick(){
+  try {
+    const r = await fetch(SOL_MARK, { cache: 'no-store' });
+    const d = await r.json();
+    if (d && !d.error){
+      paintMark(d, 'browser',
+        'the same GET phoenix.py uses. /api/state is the fallback if CORS blocks.');
+      return;
+    }
+    throw new Error((d && d.error) || 'no mark');
+  } catch (e) { /* proxy */ }
+  const s = await solFromState();
+  if (s && s.phoenix && s.phoenix.ok){
+    paintMark(s.phoenix, '/api/state',
+      'browser could not read Phoenix (CORS or rate limit); filled from /api/state.');
+    return;
+  }
+  paintMark(null, null,
+    'Phoenix mark is a public GET. If this stays a dash, CORS or a rate limit blocked both the browser and /api/state — the API is https://perp-api.phoenix.trade/v1/market/SOL/mark-price');
+}
+
+async function solStonkTick(){
+  let tokens = null, pairs = null;
+  try {
+    const r = await fetch(SOL_TOKENS, { cache: 'no-store' });
+    if (r.ok) tokens = pickTokens(await r.json());
+  } catch (e) {}
+  try {
+    const r = await fetch(SOL_PAIRS, { cache: 'no-store' });
+    if (r.ok) pairs = pickPairs(await r.json());
+  } catch (e) {}
+  if (tokens == null || pairs == null){
+    const s = await solFromState();
+    if (s){
+      if (tokens == null && s.tokens) tokens = s.tokens;
+      if (pairs == null && s.pairs) pairs = s.pairs;
+    }
+  }
+  paintTokens(tokens || []);
+  paintPairs(pairs || []);
+  solPip('sol-stk-pip', !!(tokens && tokens.length));
+}
+
+(function(){
+  const frame = $$('sol-iframe');
+  frame.addEventListener('load', () => solPip('sol-tape-pip', true));
+  solPip('sol-tape-pip', true);
+})();
+
+async function solTick(){
+  $$('sol-updated').textContent = new Date().toISOString().slice(11, 19) + ' UTC';
+  await Promise.all([solHealthTick(), solMarkTick(), solStonkTick()]);
+}
+solTick();
+setInterval(solTick, 20000);
 
 </script>
 </body>

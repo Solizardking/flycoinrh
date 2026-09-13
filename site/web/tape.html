@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FLYBRAIN · PumpFun tape</title>
+<meta name="description" content="Read-only PumpFun live tape, same relay as clawd-ws.fly.dev.">
+<link rel="icon" href="/fly.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --g:#3dff88; --g-dim:#1f8f4d; --g-faint:#155c33; --g-bg:#020704;
+  --line:#123a24; --ink:#e2eaf1;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--g-bg);color:var(--g);
+  font-family:var(--mono);font-size:12px;line-height:1.5}
+a{color:var(--g);text-decoration:none;border-bottom:1px solid var(--g-faint)}
+a:hover{border-bottom-color:var(--g)}
+:focus-visible{outline:2px solid var(--g);outline-offset:2px}
+.term{display:flex;flex-direction:column;height:100%;background:var(--g-bg);
+  border:1px solid var(--line)}
+.tbar{display:flex;align-items:center;gap:12px;padding:8px 12px;flex-wrap:wrap;
+  border-bottom:1px solid var(--line);background:#04100a}
+.tname{font-weight:500;letter-spacing:.14em}
+.tdim{color:var(--g-faint);letter-spacing:.1em;font-size:10.5px}
+.tspacer{flex:1}
+.tlive{color:#ff5f56;font-size:10px;letter-spacing:.14em}
+.tlive.on{color:var(--g)}
+.stats{display:flex;flex-wrap:wrap;gap:16px;padding:6px 12px;
+  border-bottom:1px solid #0d2c1b;background:#04100a;color:var(--g-dim);
+  font-size:10.5px;letter-spacing:.08em}
+.stats b{color:var(--g);font-weight:500}
+.log{flex:1;overflow:auto;padding:8px 12px;display:flex;flex-direction:column-reverse}
+.row{display:grid;grid-template-columns:64px 72px 1fr auto;gap:10px;
+  align-items:baseline;padding:4px 0;border-top:1px solid #0a2416}
+.row:last-child{border-top:0}
+.t{color:var(--g-faint);font-variant-numeric:tabular-nums}
+.s{color:var(--g);letter-spacing:.04em}
+.n{color:var(--g-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.m{color:var(--g-dim);font-variant-numeric:tabular-nums;white-space:nowrap}
+.sys{color:var(--g-faint);padding:6px 0}
+.foot{display:flex;flex-wrap:wrap;gap:16px;padding:7px 12px;
+  border-top:1px solid var(--line);background:#04100a;color:var(--g-dim);font-size:10.5px}
+body.embed .tbar .full,body.embed .foot .full{display:none}
+body.embed .term{border:0}
+@media (max-width:560px){
+  .row{grid-template-columns:54px 1fr auto}
+  .n{grid-column:1/-1}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<div class="term">
+  <div class="tbar">
+    <span class="tname">PUMPFUN TAPE</span>
+    <span class="tdim">CLAWD-WS RELAY · READ ONLY</span>
+    <span class="tspacer"></span>
+    <span class="tdim full"><a href="https://clawd-ws.fly.dev/" target="_blank" rel="noopener noreferrer">clawd-ws.fly.dev</a></span>
+    <span class="tlive" id="live">&#9679; OFF</span>
+  </div>
+  <div class="stats">
+    <span>status <b id="h-status">&mdash;</b></span>
+    <span>clients <b id="h-clients">&mdash;</b></span>
+    <span>launches <b id="h-launches">&mdash;</b></span>
+    <span>solana <b id="h-solana">&mdash;</b></span>
+  </div>
+  <div class="log" id="log" aria-live="polite"></div>
+  <div class="foot">
+    <span>same frames as <span class="tdim">clawdws.py</span></span>
+    <span class="full"><a href="https://clawd-ws.fly.dev/" target="_blank" rel="noopener noreferrer">open live tape</a></span>
+    <span>no keys · no signing</span>
+  </div>
+</div>
+<script>
+const WS = 'wss://clawd-ws.fly.dev/ws';
+const HEALTH = 'https://clawd-ws.fly.dev/health';
+const ORB_TOKEN = 'https://orbmarkets.io/token/';
+const MAX = 48;
+const $ = (id) => document.getElementById(id);
+const nf = (v) => v == null || v === '' || !isFinite(Number(v))
+  ? '—' : Number(v).toLocaleString();
+const cut = (s, n) => {
+  const x = s == null ? '' : String(s);
+  return x.length > n ? x.slice(0, n - 1) + '…' : x;
+};
+const q = new URLSearchParams(location.search);
+if (q.has('embed') || window !== window.top) document.body.classList.add('embed');
+
+function sys(msg){
+  const el = document.createElement('div');
+  el.className = 'sys';
+  el.textContent = msg;
+  $('log').appendChild(el);
+}
+function row(ev){
+  const el = document.createElement('div');
+  el.className = 'row';
+  const t = document.createElement('span');
+  t.className = 't';
+  const ms = Number(ev.time);
+  t.textContent = isFinite(ms) ? new Date(ms > 1e11 ? ms : ms * 1000).toISOString().slice(11, 19)
+    : new Date().toISOString().slice(11, 19);
+  const s = document.createElement('span');
+  s.className = 's';
+  s.textContent = cut(ev.symbol || '?', 12);
+  const n = document.createElement('span');
+  n.className = 'n';
+  const a = document.createElement('a');
+  a.href = ORB_TOKEN + encodeURIComponent(ev.mint || '');
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  a.textContent = cut(ev.name || ev.mint || 'unnamed', 42);
+  n.appendChild(a);
+  const m = document.createElement('span');
+  m.className = 'm';
+  const cap = ev.marketCapSol;
+  m.textContent = cap == null || !isFinite(Number(cap)) ? '—' : Number(cap).toFixed(2) + ' SOL';
+  el.appendChild(t); el.appendChild(s); el.appendChild(n); el.appendChild(m);
+  $('log').appendChild(el);
+  while ($('log').children.length > MAX) $('log').removeChild($('log').firstChild);
+}
+function paintHealth(d){
+  if (!d) return;
+  $('h-status').textContent = cut(d.status, 16) || '—';
+  $('h-clients').textContent = nf(d.clients);
+  $('h-launches').textContent = nf(d.totalLaunches);
+  $('h-solana').textContent = d.solana === true ? 'on' : d.solana === false ? 'off' : '—';
+}
+async function health(){
+  try {
+    const r = await fetch(HEALTH, { cache: 'no-store' });
+    const d = await r.json();
+    paintHealth({
+      status: d.status, clients: d.clients,
+      totalLaunches: d.totalLaunches, solana: d.solana,
+    });
+  } catch (e) { /* leave last good numbers */ }
+}
+
+let sock = null, wait = 1000;
+function connect(){
+  try { if (sock) sock.close(); } catch (e) {}
+  sock = new WebSocket(WS);
+  sock.onopen = () => {
+    wait = 1000;
+    $('live').classList.add('on');
+    $('live').textContent = '● LIVE';
+  };
+  sock.onmessage = (ev) => {
+    let msg;
+    try { msg = JSON.parse(ev.data); } catch (e) { return; }
+    if (!msg || typeof msg !== 'object') return;
+    if (msg.type === 'token-launch') row(msg);
+    else if (msg.type === 'status' && msg.clients != null) {
+      // clients move with the socket; launch totals stay on /health so the
+      // two counters on this page do not disagree
+      $('h-clients').textContent = nf(msg.clients);
+    }
+  };
+  sock.onclose = () => {
+    $('live').classList.remove('on');
+    $('live').textContent = '● OFF';
+    sock = null;
+    setTimeout(connect, wait);
+    wait = Math.min(wait * 2, 15000);
+  };
+  sock.onerror = () => { try { sock.close(); } catch (e) {} };
+}
+
+sys('listening on the public relay — launches appear here, nothing is signed');
+health();
+setInterval(health, 15000);
+connect();
+</script>
+</body>
+</html>
